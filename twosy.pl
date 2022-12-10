@@ -23,78 +23,84 @@
 
 :- dynamic sphere/4.
 
-%----------------------------------------------------------------------------%
-% twosy
+% ----------------------------------------------------------------------------
+%   twosy()/2
 %     +State: State of rubix cube
 %     -Path:  The path of moves to Solved rubix cube state
-% 
-%     Uses auxilary predicate find() to first find the spheres of reachable states 7 moves out from some states.
-%     It then just finds two spheres, one that starts at 'State' and is 7 moves out, and one the starts at a 'state_zero' and is 7 moves out
-%     then, it just uses these two paths to create one path from State to Solved, using another auxilary predicate reversed_paths,
-%     as well as some built in predicates.
-%     Finally twosy just applies this path to 'State' using apply_path
+%  
+%   Uses find()/2 to exend the knoweldge base with more and more levels of 
+%   move path spheres (starting from given state, and starting from 
+%   a solved state) until we find two that match (this is the meet in the middle
+%   strategy). Then the two paths are just appended into one.
+%
+% ----------------------------------------------------------------------------
 
 twosy(State, Path) :-
-    find_spheres(State, Start, 0, []),
+    find(State, 0),
     state_zero(X),
+
     % Uses natural() to increas the level of breadth-search if we fail
     % to find two matching spherese
     natural(Level),
     write("Starting Level: "), write(Level), nl,
     find(State, Level),
     find(X, Level),
+
+    %Check if two spheres meet
     sphere(State, Final, Level, First_Path),
     sphere(X, Final, Level, Second_Path_Rev),
-    write("Found a match at Level: "), write(Level).
+    write("Found a match at Level: "), write(Level), nl,
+
     reverse(Second_Path_Rev, Second_Path),
     reversed_path(Second_Path, Last_Path),
     append(First_Path, Last_Path, Path),
     apply_path(State, Path).
 
-%----------------------------------------------------------------------------%
-%   Reverse the moves in a path of rubix cube moves
-%   Note!!!!!: reverses with respect to moves, as is the moves have the reverse effect on rubix cube
-%
-%   reveersed_path(Path, Reversed)
+% ----------------------------------------------------------------------------
+%   reversed_path()/2
+%   
 %   Path | path to be reversed
 %   Reversed | reversed path
+%
+%   Reverse the moves in a path of rubix cube moves e
+%
+% ----------------------------------------------------------------------------
+
 reversed_path([Mv|Rest], [NewMv|Reverse]):-
     reversal(Mv, NewMv),
     reversed_path(Rest, Reverse).
 reversed_path([],Reverse):-
     Reverse = [].
 
-%----------------------------------------------------------------------------%
-%   find(Start, Level)
-%   Finds all spheres reachable from up to 7 moves from state 'Start' in a breadth-first fashion
+% ----------------------------------------------------------------------------
+%   find()/2
+%   
+%   Start | Starting rubix cube state (represented in list form)
+%   Level | Level of breadth to exend the knowledge base with (if it is 0 the
+%   first level of spheres will be found, if > 0, the current shperes will 
+%   be extended
 %
-%   Goes Level by level, using find_spheres, an auxilary predicate, to explore all spheres reachable from Level
-%   Once find_spheres is exhausted for one spheres, prolog backtracks and finds another sphere at the same level
-%   and exhausts all reachable sphers for this sphere and keeps doing this until it  find any until it moves onto the
-%   next level
+%   Extends the breadth-level of spheres in the knowledge base starting from
+%   'Start' by one
+%
+% ----------------------------------------------------------------------------
 
-%No other spheres ate this level, go to next level
-% idea for dynamic bfs: each time find(Start, Level) is called, assume all 1...Level levels of sphere are already 
-% already recorded then just increment to Level + 1 and record all now reachable spheres into KB
-% need some way to pass the query once all spheres at this level are already exlpored
-% find(Start, Level):-
-%     NewLevel is Level + 1,
-%     write("")
-
-% We then want prolog to backtrack to this rule after all reachable spheres at the current level have been explored
-% find(Start, Level):-
+% Base Case
+find(State, 0):-
+    find_spheres(State, State, 0, []).
+% So first breadth can pass
+find(State, 0):-
+    !.
 
 find(Start, Level):-
-    write("New Level is: " + NewLevel + "\n"),
     sphere(Start, State, NewLevel, Path),
     find_spheres(Start,State, NewLevel, Path).
-
 %If all levels have been explored, give the pass on search
 find(Start, Level):-
     !.
     
 %----------------------------------------------------------------------------%
-%   find_spheres(Start, State, Step, Path)
+%   find_spheres()/4
 %
 %   Start | The Starting state for this sphere of reachable states
 %   State | The current state of rubix cube after the following the Path of moves from Start state
@@ -113,8 +119,8 @@ find_spheres(Start, State, Step, Path):-
     fail.
 
 
-% Simple algo for giving increasingly bigger natural numbers
+% Simple algo for giving ascending natural numbers
 natural(1).
-natrual(X):-
+natural(X):-
     natural(Y),
     X is Y + 1.
