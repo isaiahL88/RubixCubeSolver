@@ -24,7 +24,7 @@
 :- dynamic sphere/4.
 
 % ----------------------------------------------------------------------------
-%   twosy()/2
+%   twosy()/2 
 %     +State: State of rubix cube
 %     -Path:  The path of moves to Solved rubix cube state
 %  
@@ -42,14 +42,14 @@ twosy(State, Path) :-
     % Uses natural() to increas the level of breadth-search if we fail
     % to find two matching spherese
     natural(Level),
-    write("Starting Level: "), write(Level), nl,
+    write("Extending Level: "), write(Level), nl,
     find(State, Level),
     find(X, Level),
 
     %Check if two spheres meet
-    sphere(State, Final, Level, First_Path),
-    sphere(X, Final, Level, Second_Path_Rev),
-    write("Found a match at Level: "), write(Level), nl,
+    sphere(State, Final, MatchLevel, First_Path),
+    sphere(X, Final, MatchLevel, Second_Path_Rev),
+    write("Found a match at Level: "), write(MatchLevel), nl,
 
     reverse(Second_Path_Rev, Second_Path),
     reversed_path(Second_Path, Last_Path),
@@ -93,8 +93,8 @@ find(State, 0):-
     !.
 
 find(Start, Level):-
-    sphere(Start, State, NewLevel, Path),
-    find_spheres(Start,State, NewLevel, Path).
+    sphere(Start, State, Level, Path),
+    find_spheres(Start, State, Level, Path).
 %If all levels have been explored, give the pass on search
 find(Start, Level):-
     !.
